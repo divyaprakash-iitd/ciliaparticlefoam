@@ -1,0 +1,90 @@
+In file included from icoFoam.C:116:
+interpolateForces.H: In function ‘int main(int, char**)’:
+interpolateForces.H:64:6: error: no match for ‘operator[]’ (operand types are ‘Foam::volVectorField’ {aka ‘Foam::GeometricField<Foam::Vector<double>, Foam::fvPatchField, Foam::volMesh>’} and ‘std::set<int>::const_iterator’ {aka ‘std::_Rb_tree<int, int, std::_Identity<int>, std::less<int>, std::allocator<int> >::const_iterator’})
+   64 |     F[icell][0] = F[*icell][0] + pf[0]*diracdelta(ddpoint,hh);
+      |      ^
+In file included from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UList.H:652,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/List.H:46,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/labelList.H:45,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UPstream.H:45,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/Pstream.H:45,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/parRun.H:39,
+                 from /usr/lib/openfoam/openfoam2012/src/finiteVolume/lnInclude/fvCFD.H:4,
+                 from icoFoam.C:66:
+/usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UListI.H:246:11: note: candidate: ‘T& Foam::UList<T>::operator[](Foam::label) [with T = Foam::Vector<double>; Foam::label = int]’
+  246 | inline T& Foam::UList<T>::operator[](const label i)
+      |           ^~~~
+/usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UListI.H:246:50: note:   no known conversion for argument 1 from ‘std::set<int>::const_iterator’ {aka ‘std::_Rb_tree<int, int, std::_Identity<int>, std::less<int>, std::allocator<int> >::const_iterator’} to ‘Foam::label’ {aka ‘int’}
+  246 | inline T& Foam::UList<T>::operator[](const label i)
+      |                                      ~~~~~~~~~~~~^
+/usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UListI.H:256:17: note: candidate: ‘const T& Foam::UList<T>::operator[](Foam::label) const [with T = Foam::Vector<double>; Foam::label = int]’
+  256 | inline const T& Foam::UList<T>::operator[](const label i) const
+      |                 ^~~~
+/usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UListI.H:256:56: note:   no known conversion for argument 1 from ‘std::set<int>::const_iterator’ {aka ‘std::_Rb_tree<int, int, std::_Identity<int>, std::less<int>, std::allocator<int> >::const_iterator’} to ‘Foam::label’ {aka ‘int’}
+  256 | inline const T& Foam::UList<T>::operator[](const label i) const
+      |                                            ~~~~~~~~~~~~^
+In file included from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UList.H:657,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/List.H:46,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/labelList.H:45,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UPstream.H:45,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/Pstream.H:45,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/parRun.H:39,
+                 from /usr/lib/openfoam/openfoam2012/src/finiteVolume/lnInclude/fvCFD.H:4,
+                 from icoFoam.C:66:
+/usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UList.C:143:16: note: candidate: ‘Foam::UList<T> Foam::UList<T>::operator[](const Foam::labelRange&) [with T = Foam::Vector<double>]’
+  143 | Foam::UList<T> Foam::UList<T>::operator[](const labelRange& range)
+      |                ^~~~
+/usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UList.C:143:61: note:   no known conversion for argument 1 from ‘std::set<int>::const_iterator’ {aka ‘std::_Rb_tree<int, int, std::_Identity<int>, std::less<int>, std::allocator<int> >::const_iterator’} to ‘const Foam::labelRange&’
+  143 | Foam::UList<T> Foam::UList<T>::operator[](const labelRange& range)
+      |                                           ~~~~~~~~~~~~~~~~~~^~~~~
+/usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UList.C:152:22: note: candidate: ‘const Foam::UList<T> Foam::UList<T>::operator[](const Foam::labelRange&) const [with T = Foam::Vector<double>]’
+  152 | const Foam::UList<T> Foam::UList<T>::operator[](const labelRange& range) const
+      |                      ^~~~
+/usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UList.C:152:67: note:   no known conversion for argument 1 from ‘std::set<int>::const_iterator’ {aka ‘std::_Rb_tree<int, int, std::_Identity<int>, std::less<int>, std::allocator<int> >::const_iterator’} to ‘const Foam::labelRange&’
+  152 | const Foam::UList<T> Foam::UList<T>::operator[](const labelRange& range) const
+      |                                                 ~~~~~~~~~~~~~~~~~~^~~~~
+In file included from icoFoam.C:116:
+interpolateForces.H:65:6: error: no match for ‘operator[]’ (operand types are ‘Foam::volVectorField’ {aka ‘Foam::GeometricField<Foam::Vector<double>, Foam::fvPatchField, Foam::volMesh>’} and ‘std::set<int>::const_iterator’ {aka ‘std::_Rb_tree<int, int, std::_Identity<int>, std::less<int>, std::allocator<int> >::const_iterator’})
+   65 |     F[icell][1] = F[*icell][1] + pf[1]*diracdelta(ddpoint,hh);
+      |      ^
+In file included from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UList.H:652,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/List.H:46,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/labelList.H:45,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UPstream.H:45,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/Pstream.H:45,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/parRun.H:39,
+                 from /usr/lib/openfoam/openfoam2012/src/finiteVolume/lnInclude/fvCFD.H:4,
+                 from icoFoam.C:66:
+/usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UListI.H:246:11: note: candidate: ‘T& Foam::UList<T>::operator[](Foam::label) [with T = Foam::Vector<double>; Foam::label = int]’
+  246 | inline T& Foam::UList<T>::operator[](const label i)
+      |           ^~~~
+/usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UListI.H:246:50: note:   no known conversion for argument 1 from ‘std::set<int>::const_iterator’ {aka ‘std::_Rb_tree<int, int, std::_Identity<int>, std::less<int>, std::allocator<int> >::const_iterator’} to ‘Foam::label’ {aka ‘int’}
+  246 | inline T& Foam::UList<T>::operator[](const label i)
+      |                                      ~~~~~~~~~~~~^
+/usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UListI.H:256:17: note: candidate: ‘const T& Foam::UList<T>::operator[](Foam::label) const [with T = Foam::Vector<double>; Foam::label = int]’
+  256 | inline const T& Foam::UList<T>::operator[](const label i) const
+      |                 ^~~~
+/usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UListI.H:256:56: note:   no known conversion for argument 1 from ‘std::set<int>::const_iterator’ {aka ‘std::_Rb_tree<int, int, std::_Identity<int>, std::less<int>, std::allocator<int> >::const_iterator’} to ‘Foam::label’ {aka ‘int’}
+  256 | inline const T& Foam::UList<T>::operator[](const label i) const
+      |                                            ~~~~~~~~~~~~^
+In file included from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UList.H:657,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/List.H:46,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/labelList.H:45,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UPstream.H:45,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/Pstream.H:45,
+                 from /usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/parRun.H:39,
+                 from /usr/lib/openfoam/openfoam2012/src/finiteVolume/lnInclude/fvCFD.H:4,
+                 from icoFoam.C:66:
+/usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UList.C:143:16: note: candidate: ‘Foam::UList<T> Foam::UList<T>::operator[](const Foam::labelRange&) [with T = Foam::Vector<double>]’
+  143 | Foam::UList<T> Foam::UList<T>::operator[](const labelRange& range)
+      |                ^~~~
+/usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UList.C:143:61: note:   no known conversion for argument 1 from ‘std::set<int>::const_iterator’ {aka ‘std::_Rb_tree<int, int, std::_Identity<int>, std::less<int>, std::allocator<int> >::const_iterator’} to ‘const Foam::labelRange&’
+  143 | Foam::UList<T> Foam::UList<T>::operator[](const labelRange& range)
+      |                                           ~~~~~~~~~~~~~~~~~~^~~~~
+/usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UList.C:152:22: note: candidate: ‘const Foam::UList<T> Foam::UList<T>::operator[](const Foam::labelRange&) const [with T = Foam::Vector<double>]’
+  152 | const Foam::UList<T> Foam::UList<T>::operator[](const labelRange& range) const
+      |                      ^~~~
+/usr/lib/openfoam/openfoam2012/src/OpenFOAM/lnInclude/UList.C:152:67: note:   no known conversion for argument 1 from ‘std::set<int>::const_iterator’ {aka ‘std::_Rb_tree<int, int, std::_Identity<int>, std::less<int>, std::allocator<int> >::const_iterator’} to ‘const Foam::labelRange&’
+  152 | const Foam::UList<T> Foam::UList<T>::operator[](const labelRange& range) const
+      |                                                 ~~~~~~~~~~~~~~~~~~^~~~~
+make: *** [/usr/lib/openfoam/openfoam2012/wmake/rules/General/transform:35: Make/linux64GccDPInt32Opt/icoFoam.o] Error 1
