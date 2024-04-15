@@ -142,6 +142,7 @@ int main(int argc, char *argv[])
         getpositions(pposx.data(),pposy.data(),pposz.data(),&noelpts); 
         // Calculate the forces in the particle
         calculateforces(pfx.data(),pfy.data(),pfz.data(),&noelpts);
+	// Calculate the moments in the cilia : Cilia
 
         // Create a list of lists to store the neighbours for 
         // every node of the particle
@@ -173,6 +174,9 @@ int main(int argc, char *argv[])
                 #include "interpolateForces.H"
             }
         }
+
+	// Calculate forces arising from moments: Cilia
+	// Create and interpolate mden from cilia nodes and then calculate curl of mden to obtain these forces
         ///////////////////////////////////////////////////////////////////////////////////////////
 
         // Momentum predictor
@@ -254,12 +258,17 @@ int main(int argc, char *argv[])
             pvy[inoelpts] = pu[1];
             pvz[inoelpts] = pu[2];
         }
+
+
+	// Calculate angular velocity of fluid and interpolate it to the cilia nodes: Cilia
+
         // Clear the list of lists of neighbours
         neighborsList.clear();
         double simdt = runTime.deltaTValue();
 
         // Update the position of all the nodes
         updatepositions(pvx.data(),pvy.data(),pvz.data(),&simdt,&noelpts);
+        // Update the orientation of all the cilia nodes: Cilia
         ///////////////////////////////////////////////////////////////////////////////////////////
 
         runTime.write();
