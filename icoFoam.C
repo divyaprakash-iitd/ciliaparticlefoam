@@ -75,15 +75,15 @@ Description
 #include "diracdelta.H"
 // Declare the external subroutine
 extern "C" {
-    void generateellipse(int *noelpts);
+    void generatecilia(int *noelpts, double *h);
     // void sayhello();
-    void getpositions(double *pposx, double *pposy, double *pposz, int *noelpts);
+    // void getpositions(double *pposx, double *pposy, double *pposz, int *noelpts);
     // subroutine getpositions(XC,YC,ZC) bind(C)
-    void calculateforces(double *pfx, double *pfy, double *pfz, int *noelpts);
+    // void calculateforces(double *pfx, double *pfy, double *pfz, int *noelpts);
     // subroutine calculateforces(FXC,FYC,FZC) bind(C)
-    void updatepositions(double *pvx, double *pvy, double *pvz, double *dt, int *noelpts);
+    // void updatepositions(double *pvx, double *pvy, double *pvz, double *dt, int *noelpts);
     // subroutine updatepositions(U,V,W,dt) bind(C)
-    void arraycheck(double *pxyz, int* n);
+    // void arraycheck(double *pxyz, int* n);
     // void arraycheck(int *pxyz, int* n);
 }
 
@@ -111,18 +111,20 @@ int main(int argc, char *argv[])
 
     Info<< "\nStarting time loop\n" << endl;
     int noelpts;
-    generateellipse(&noelpts);
-    Info << "No. of ellipse points: " << noelpts << endl;
+    double meshwidth;
+    meshwidth = 0.01;
+    generatecilia(&noelpts,&meshwidth);
+    Info << "No. of cilia points: " << noelpts << endl;
 
-    // Initial position of the point source
-    scalar pzmid = (mesh.C()[1][0] - mesh.C()[0][0])/2.0;
-    Info << "ZZ: " << pzmid << endl;
-    vector rr(0.0,0.0,pzmid); // Define the point
+    // // Initial position of the point source
+    // scalar pzmid = (mesh.C()[1][0] - mesh.C()[0][0])/2.0;
+    // Info << "ZZ: " << pzmid << endl;
+    // vector rr(0.0,0.0,pzmid); // Define the point
 
-    // // Create vectors for storing the particle's Positions, Forces and Velocity
-    std::vector<double> pposx(noelpts,0), pposy(noelpts,0), pposz(noelpts,0);   //Position
-    std::vector<double> pfx(noelpts,0), pfy(noelpts,0), pfz(noelpts,0);         // Force
-    std::vector<double> pvx(noelpts,0), pvy(noelpts,0), pvz(noelpts,0);         // Velocity
+    // // // Create vectors for storing the particle's Positions, Forces and Velocity
+    // std::vector<double> pposx(noelpts,0), pposy(noelpts,0), pposz(noelpts,0);   //Position
+    // std::vector<double> pfx(noelpts,0), pfy(noelpts,0), pfz(noelpts,0);         // Force
+    // std::vector<double> pvx(noelpts,0), pvy(noelpts,0), pvz(noelpts,0);         // Velocity
 
     while (runTime.loop())
     {
@@ -139,41 +141,41 @@ int main(int argc, char *argv[])
 
         ///////////////////////////////////////////////////////////////////////////////////////////        
         // Get positions of the ellipse
-        getpositions(pposx.data(),pposy.data(),pposz.data(),&noelpts); 
+        // getpositions(pposx.data(),pposy.data(),pposz.data(),&noelpts); 
         // Calculate the forces in the particle
-        calculateforces(pfx.data(),pfy.data(),pfz.data(),&noelpts);
+        // calculateforces(pfx.data(),pfy.data(),pfz.data(),&noelpts);
 	// Calculate the moments in the cilia : Cilia
 
         // Create a list of lists to store the neighbours for 
         // every node of the particle
-        Foam::DynamicList<Foam::labelList> neighborsList;
-        for (int inoelpts = 0; inoelpts < noelpts; ++inoelpts) {
-            // Get the node's location
-            rr[0] = pposx[inoelpts]; rr[1] = pposy[inoelpts]; rr[2] = pposz[inoelpts];
-            #include "getNeighbours.H"
-            neighborsList.append(appended);
-            appended.clear();
-        }
+        // Foam::DynamicList<Foam::labelList> neighborsList;
+        // for (int inoelpts = 0; inoelpts < noelpts; ++inoelpts) {
+        //     // Get the node's location
+        //     rr[0] = pposx[inoelpts]; rr[1] = pposy[inoelpts]; rr[2] = pposz[inoelpts];
+        //     #include "getNeighbours.H"
+        //     neighborsList.append(appended);
+        //     appended.clear();
+        // }
 
 
-        // Initialize the force source term to zero
-        F = F*0;
-        // Go through each of the nodes and then their neighbours
-        for (int inoelpts = 0; inoelpts < noelpts; ++inoelpts) {
-            // Get the node's location
-            rr[0] = pposx[inoelpts]; rr[1] = pposy[inoelpts]; rr[2] = pposz[inoelpts];
-            // Get the node's force
-            vector pf(0.0,0.0,0.0);
-            pf[0] = pfx[inoelpts]; pf[1] = pfy[inoelpts]; pf[2] = pfz[inoelpts];
-            // Get the neighbors list for that node alone
-            labelList singleNodeNeighbors = neighborsList[inoelpts];
+        // // Initialize the force source term to zero
+        // F = F*0;
+        // // Go through each of the nodes and then their neighbours
+        // for (int inoelpts = 0; inoelpts < noelpts; ++inoelpts) {
+        //     // Get the node's location
+        //     rr[0] = pposx[inoelpts]; rr[1] = pposy[inoelpts]; rr[2] = pposz[inoelpts];
+        //     // Get the node's force
+        //     vector pf(0.0,0.0,0.0);
+        //     pf[0] = pfx[inoelpts]; pf[1] = pfy[inoelpts]; pf[2] = pfz[inoelpts];
+        //     // Get the neighbors list for that node alone
+        //     labelList singleNodeNeighbors = neighborsList[inoelpts];
 
-            // Iterate through each of the neighbouring cells of the selected node 
-            forAll(singleNodeNeighbors,idx) {
-                int icell = singleNodeNeighbors[idx];   
-                #include "interpolateForces.H"
-            }
-        }
+        //     // Iterate through each of the neighbouring cells of the selected node 
+        //     forAll(singleNodeNeighbors,idx) {
+        //         int icell = singleNodeNeighbors[idx];   
+        //         #include "interpolateForces.H"
+        //     }
+        // }
 
 	// Calculate forces arising from moments: Cilia
 	// Create and interpolate mden from cilia nodes and then calculate curl of mden to obtain these forces
@@ -185,7 +187,7 @@ int main(int argc, char *argv[])
             fvm::ddt(U)
           + fvm::div(phi, U)
           - fvm::laplacian(nu, U) 
-          - F // IBM Source Term 
+        //   - F // IBM Source Term 
         );
 
         if (piso.momentumPredictor())
@@ -237,38 +239,38 @@ int main(int argc, char *argv[])
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////
-        // Go through each of the nodes and then their neighbours
-        for (int inoelpts = 0; inoelpts < noelpts; ++inoelpts) {
-            // Get the node's location
-            rr[0] = pposx[inoelpts];
-            rr[1] = pposy[inoelpts];
-            rr[2] = pposz[inoelpts];
-            // Get the neighbors list for that node alone
-            labelList singleNodeNeighbors = neighborsList[inoelpts];
+    //     // Go through each of the nodes and then their neighbours
+    //     for (int inoelpts = 0; inoelpts < noelpts; ++inoelpts) {
+    //         // Get the node's location
+    //         rr[0] = pposx[inoelpts];
+    //         rr[1] = pposy[inoelpts];
+    //         rr[2] = pposz[inoelpts];
+    //         // Get the neighbors list for that node alone
+    //         labelList singleNodeNeighbors = neighborsList[inoelpts];
 
-            // Define a variable to store the point source velocity
-            vector pu(0,0,0);
-            // Iterate through each of the neighbouring cells of the selected node 
-            forAll(singleNodeNeighbors,idx) {
-                int icell = singleNodeNeighbors[idx];   
-                #include "interpolateVelocity.H"
-            }
-            // Store the interpolated velocity at each node
-            pvx[inoelpts] = pu[0]; 
-            pvy[inoelpts] = pu[1];
-            pvz[inoelpts] = pu[2];
-        }
+    //         // Define a variable to store the point source velocity
+    //         vector pu(0,0,0);
+    //         // Iterate through each of the neighbouring cells of the selected node 
+    //         forAll(singleNodeNeighbors,idx) {
+    //             int icell = singleNodeNeighbors[idx];   
+    //             #include "interpolateVelocity.H"
+    //         }
+    //         // Store the interpolated velocity at each node
+    //         pvx[inoelpts] = pu[0]; 
+    //         pvy[inoelpts] = pu[1];
+    //         pvz[inoelpts] = pu[2];
+    //     }
 
 
-	// Calculate angular velocity of fluid and interpolate it to the cilia nodes: Cilia
+	// // Calculate angular velocity of fluid and interpolate it to the cilia nodes: Cilia
 
-        // Clear the list of lists of neighbours
-        neighborsList.clear();
-        double simdt = runTime.deltaTValue();
+    //     // Clear the list of lists of neighbours
+    //     neighborsList.clear();
+    //     double simdt = runTime.deltaTValue();
 
-        // Update the position of all the nodes
-        updatepositions(pvx.data(),pvy.data(),pvz.data(),&simdt,&noelpts);
-        // Update the orientation of all the cilia nodes: Cilia
+    //     // Update the position of all the nodes
+    //     updatepositions(pvx.data(),pvy.data(),pvz.data(),&simdt,&noelpts);
+    //     // Update the orientation of all the cilia nodes: Cilia
         ///////////////////////////////////////////////////////////////////////////////////////////
 
         runTime.write();

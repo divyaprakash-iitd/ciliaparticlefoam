@@ -5,4 +5,5 @@ EXE_INC = \
 EXE_LIBS = \
     -lfiniteVolume \
     -lmeshTools \
-    -L/home/divyaprakash/my_solvers/ofcil3D/fem2d -lsoftparticles3D
+    -L/home/divyaprakash/my_solvers/ciliaparticlefoam/cilia2D -lsoftcilia
+    #-L/home/divyaprakash/my_solvers/ofcil3D/fem2d -lsoftparticles3D
