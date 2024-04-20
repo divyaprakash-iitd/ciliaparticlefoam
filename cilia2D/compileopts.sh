@@ -13,8 +13,9 @@ gfortran -c mod_io.f90 -o mod_io.o
 gfortran -c mod_cilia.f90 -o mod_cilia.o
 
 # Compile soft_particles.f90 and link with object files to create shared library
-#gfortran -c -fPIC soft_cilia.f90 -o soft_cilia.o
-#gfortran -shared -o libsoftcilia.so soft_cilia.o mod_cilia.o mod_solid.o mod_io.o
+gfortran -c -fPIC soft_cilia.f90 -o soft_cilia.o 
+gfortran -shared -o libsoftcilia.so soft_cilia.o mod_cilia.o mod_solid.o mod_io.o mod_krod.o
 
 #gfortran ibmc.f90 -L. -lsoftcilia -o ibmc
-gfortran check_mod.f90 mod_io.o mod_cilia.o mod_solid.o mod_krod.o -o check_mod
+#gfortran check_mod.f90 mod_io.o mod_cilia.o mod_solid.o mod_krod.o soft_cilia.o -o check_mod
+gfortran check_mod.f90 -L. -lsoftcilia -o check_mod
