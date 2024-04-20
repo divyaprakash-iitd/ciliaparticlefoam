@@ -1,0 +1,60 @@
+!***********************************
+!*** Time related parameters
+!***********************************
+&time
+dt      = 0.0001,       ! Time step    
+it_save = 500,         ! Number of time steps between saving fields
+tsim    = 100.0000/
+!***********************************
+!***  Parameters related to grid and computational domain
+!***********************************
+&grid
+Lx  = 0.008,         ! Size of box in x direction 
+Ly  = 0.002,         ! Size of box in y direction
+Nx  = 160,       ! Number of points in x direction
+Ny  = 40/         ! Number of points in y direction
+!***********************************
+!*** Parameters related to flow
+!***********************************
+&flow
+nu      = 0.000001,     ! Kinematic viscosity
+rho     = 1000,        ! Density
+utop    = 0.006,      ! Oscillation amplitude
+tp      = 6/
+!***********************************
+!*** Cilia properties
+!***********************************
+&ciliaprops
+l      = 50e-6,
+ftip   = 0.0,
+mtip   = 0.0,
+ncilia = 15,
+Kc     = 1e-7,
+nvc    = 40,
+Bc     = 1e-16,
+kap    = 1e3,
+bap    = 2e-4/
+!***********************************
+!*** Particle properties
+!***********************************
+&particleprops
+Kp     = 2e-5,
+nvp    = 20,
+Bp     = 1e-4,
+aa     = 2.5e-4,
+bb     = 1.25e-4/
+!***********************************
+!*** Motor properties
+!***********************************
+&motorprops
+ma     = 2.667e-6,
+mk     = 2e1,
+f0     = 2e-12,
+fc     = 1e-12,
+v0     = 5e-6,
+mrho   = 1e3,
+mt     = 50e-3,
+nplus  = 0.3,
+nminus = 0.5,
+pi0    = 2.8,
+eps0   = 17.2/

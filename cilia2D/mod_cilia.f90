@@ -539,5 +539,11 @@ module mod_cilia
         ! print *, self%motorf
     
     end subroutine calculate_motorf
+    
+    subroutine sayhello() bind(C)
+       use iso_c_binding, only: C_INT, C_CHAR
+       implicit none
+       print *, "Hello!"
+    end subroutine sayhello
 
 end module mod_cilia    

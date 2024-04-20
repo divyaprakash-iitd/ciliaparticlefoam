@@ -1,4 +1,4 @@
-module soft_particles
+module soft_cilia
     use fem3d
     implicit none
 
@@ -202,4 +202,4 @@ module soft_particles
     ! 2. Calls the force calculation and fills up the force vector.
     ! 3. Takes the velocity vector from the C program and uses it to update the particle's nodes positions.
 
-end module soft_particles
+end module soft_cilia
