@@ -135,6 +135,7 @@ module soft_particles
     subroutine calculateforces(FXC,FYC,FZC,nn) bind(C)
        ! Calculates the forces in the particle
        ! Transfers those forces to the arrays passed in by openfoam
+       ! Addition: Calculate moments in the cilia and pass those to the openfoam arrays as well
        use iso_c_binding, only: c_int, c_double, c_loc
        implicit none
 
@@ -147,6 +148,9 @@ module soft_particles
 
        npoints = size(particles(1)%XE,1)
 
+
+       ! Add lines here to calculate the moments as well which will be copied to the
+       ! array in openfoam
        do i = 1,nparticles
            call particles(i)%calculate_forces()
        end do
@@ -160,8 +164,8 @@ module soft_particles
 
 
     subroutine updatepositions(U,V,W,dt,nn) bind(C)
-       ! Take in the empty position arrays from openfoam
-       ! Fill it up with values
+       ! Take in the velocity and angular velocity from openfoam
+       ! Use them to update the cilia position and orientation
        use iso_c_binding, only: c_int, c_double, c_loc
        implicit none
 
