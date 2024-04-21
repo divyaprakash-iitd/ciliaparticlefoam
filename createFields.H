@@ -48,6 +48,20 @@ volVectorField F
     mesh
 );
 
+Info<< "Reading field mden\n" << endl;
+volVectorField mden
+(
+    IOobject
+    (
+        "mden",
+        runTime.timeName(),
+        mesh,
+        IOobject::MUST_READ,
+        IOobject::AUTO_WRITE
+    ),
+    mesh
+);
+
 Info<< "Reading field U\n" << endl;
 volVectorField U
 (

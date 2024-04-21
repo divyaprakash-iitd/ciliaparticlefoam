@@ -14,7 +14,7 @@ module soft_cilia
     ! Computational Domain
     real(8)    :: Lx = 0.01 !50 !0.3
     real(8)    :: Ly = 0.002 !50 !0.1
-    real(8)    :: Lz = 0.0001 !50 !0.1
+    real(8)    :: Lz = 2.5e-5 !50 !0.1
     
     ! ! Particle information
     ! integer         :: nvp ! Number of vertices in the particle
@@ -60,12 +60,13 @@ module soft_cilia
        print *, "Hello!"
     end subroutine say_hello
 
-    subroutine generatecilia(noelpts,h) bind(C)
+    subroutine generatecilia(noelpts,cdl,h) bind(C)
     use iso_c_binding, only: C_INT, C_CHAR, c_double
     implicit none
 
     integer(C_INT), intent(inout) :: noelpts ! No. of points in all the cilia
     real(c_double), intent(in) :: h ! Mesh width in openfoam
+    real(c_double), intent(inout) :: cdl ! The segment length of cilia
 
     integer(int32) :: i, err
 
@@ -103,6 +104,7 @@ module soft_cilia
 
     ! Initialize the iteration number
     itnum = 1
+    cdl = cilia(1)%dl
 
     end subroutine generatecilia
    
@@ -181,7 +183,7 @@ module soft_cilia
        ! Add lines here to calculate the moments as well which will be copied to the
        ! array in openfoam
        do i = 1,ncilia
-           call cilia(i)%forces()
+           call cilia(i)%forces(0.000000000001d0)
            call cilia(i)%moments()
        end do
 
@@ -210,7 +212,7 @@ module soft_cilia
     end subroutine calculateforcesandmoments
 
 
-    subroutine updatepositions(U,V,W,dt,nn) bind(C)
+    subroutine updatepositions(U,V,W,MX,MY,MZ,dt,nn) bind(C)
        ! Take in the velocity and angular velocity from openfoam
        ! Use them to update the cilia position and orientation
        use iso_c_binding, only: c_int, c_double, c_loc
@@ -218,24 +220,40 @@ module soft_cilia
 
        integer(c_int), intent(in)      :: nn
        real(c_double), intent(inout)   :: U(nn), V(nn) ,W(nn)
+       real(c_double), intent(inout)   :: MX(nn), MY(nn) ,MZ(nn)
        real(c_double), intent(in)      :: dt
 
        integer(int32) :: i
 
        ! Create a matrix to store all the interpolated cilia velocity
        real(c_double), allocatable :: cux(:,:), cuy(:,:), cuz(:,:)
+       ! Create a matrix to store all the interpolated cilia moments
+       real(c_double), allocatable :: cmx(:,:), cmy(:,:), cmz(:,:)
+       
        allocate(cux(nvc-1,ncilia),cuy(nvc-1,ncilia),cuz(nvc-1,ncilia))
+       allocate(cmx(nvc-1,ncilia),cmy(nvc-1,ncilia),cmz(nvc-1,ncilia))
        
        ! Rehshape the obtained velocities in a matrix with columns corresponding to each cilia
         cux = reshape(U,[nvc-1,ncilia])
         cuy = reshape(V,[nvc-1,ncilia])
         cuz = reshape(W,[nvc-1,ncilia])
+       
+        ! Rehshape the obtained angular velocities in a matrix with columns corresponding to each cilia
+        cmx = reshape(MX,[nvc-1,ncilia])
+        cmy = reshape(MY,[nvc-1,ncilia])
+        cmz = reshape(MZ,[nvc-1,ncilia])
    
         ! Copy openfoam data to cilia 
        do i = 1,ncilia
            cilia(i)%U(:,1) = cux(:,i)
            cilia(i)%U(:,2) = cuy(:,i)
         !    cilia(i)%U(:,3) = cuz(:,i)
+       end do
+       
+       do i = 1,ncilia
+        !    cilia(i)%mden(:,1) = cmx(:,i)
+        !    cilia(i)%mden(:,2) = cmy(:,i)
+           cilia(i)%mden = cmz(:,i)
        end do
 
        itnum = itnum + 1

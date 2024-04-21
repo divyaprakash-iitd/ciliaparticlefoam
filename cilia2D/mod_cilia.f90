@@ -473,7 +473,7 @@ module mod_cilia
         self%XE(1:self%NE,1) = self%XE(1:self%NE,1) + dt * self%U(1:self%NE,1)
         self%XE(1:self%NE,2) = self%XE(1:self%NE,2) + dt * self%U(1:self%NE,2)
 
-        ! self%phi(1:self%NE) = self%phi(1:self%NE) + dt * self%mden(1:self%NE)
+        self%phi(1:self%NE) = self%phi(1:self%NE) + dt * self%mden(1:self%NE)
 
     end subroutine update
 
