@@ -79,7 +79,7 @@ extern "C" {
     // void sayhello();
     void getpositions(double *pposx, double *pposy, double *pposz, int *noelpts);
     // subroutine getpositions(XC,YC,ZC) bind(C)
-    // void calculateforces(double *pfx, double *pfy, double *pfz, int *noelpts);
+    void calculateforcesandmoments(double *pfx, double *pfy, double *pfz, double *pmx, double *pmy, double *pmz, int *noelpts);
     // subroutine calculateforces(FXC,FYC,FZC) bind(C)
     // void updatepositions(double *pvx, double *pvy, double *pvz, double *dt, int *noelpts);
     // subroutine updatepositions(U,V,W,dt) bind(C)
@@ -123,7 +123,8 @@ int main(int argc, char *argv[])
 
     // // // Create vectors for storing the particle's Positions, Forces and Velocity
     std::vector<double> pposx(noelpts,0), pposy(noelpts,0), pposz(noelpts,0);   //Position
-    // std::vector<double> pfx(noelpts,0), pfy(noelpts,0), pfz(noelpts,0);         // Force
+    std::vector<double> pfx(noelpts,0), pfy(noelpts,0), pfz(noelpts,0);         // Force
+    std::vector<double> pmx(noelpts,0), pmy(noelpts,0), pmz(noelpts,0);         // Moment
     // std::vector<double> pvx(noelpts,0), pvy(noelpts,0), pvz(noelpts,0);         // Velocity
 
     while (runTime.loop())
@@ -140,10 +141,10 @@ int main(int argc, char *argv[])
 	    //const dimensionedVector mySource("mySource", dimensionSet(0,1,-2,0,0,0,0), 1000*Foam::sin(runTime.value()*omega)*vector(0,1,0));
 
         /////////////////////////////////////////////////////////////////////////////////////////        
-        // Get positions of the ellipse
+        // Get positions of the cilia
         getpositions(pposx.data(),pposy.data(),pposz.data(),&noelpts); 
-        // Calculate the forces in the particle
-        // calculateforces(pfx.data(),pfy.data(),pfz.data(),&noelpts);
+        // Calculate the forces and moments in the cilia
+        calculateforcesandmoments(pfx.data(),pfy.data(),pfz.data(), pmx.data(),pmy.data(),pmz.data(), &noelpts);
 	// Calculate the moments in the cilia : Cilia
 
         // Create a list of lists to store the neighbours for 

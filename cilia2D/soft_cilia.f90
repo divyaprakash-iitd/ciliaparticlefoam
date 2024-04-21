@@ -1,4 +1,8 @@
 module soft_cilia
+    ! List of Magic Numbers
+    ! Domain size (Lx,Ly,Lz)
+    ! Z-coordinate to convert 2d case to 3d
+
     ! use fem3d
     use mod_cilia
     use mod_io
@@ -73,7 +77,7 @@ module soft_cilia
     
     ! Create cilia
     x0 = [Lx/4.0, 3*h]
-    l = Ly/4.0d0 
+    ! l = Ly/4.0d0 
     allocate(cilia(ncilia), xcil(ncilia,2))
     lcbed = 0.80d0 * Lx ! Length of cilia bed
     delc = lcbed / (ncilia - 1)
@@ -148,35 +152,56 @@ module soft_cilia
        
     end subroutine getpositions
    
-    ! subroutine calculateforces(FXC,FYC,FZC,nn) bind(C)
-    !    ! Calculates the forces in the particle
-    !    ! Transfers those forces to the arrays passed in by openfoam
-    !    ! Addition: Calculate moments in the cilia and pass those to the openfoam arrays as well
-    !    use iso_c_binding, only: c_int, c_double, c_loc
-    !    implicit none
+    subroutine calculateforcesandmoments(FXC,FYC,FZC,MXC,MYC,MZC,nn) bind(C)
+       ! Calculates the forces in the particle
+       ! Transfers those forces to the arrays passed in by openfoam
+       ! Addition: Calculate moments in the cilia and pass those to the openfoam arrays as well
+       use iso_c_binding, only: c_int, c_double, c_loc
+       implicit none
 
-    !    integer(c_int), intent(in)      :: nn
-    !    real(c_double), intent(inout)   :: FXC(nn),FYC(nn),FZC(nn)
+       integer(c_int), intent(in)      :: nn
+       real(c_double), intent(inout)   :: FXC(nn),FYC(nn),FZC(nn)
+       real(c_double), intent(inout)   :: MXC(nn),MYC(nn),MZC(nn)
 
-    !    integer(int32) :: i, nparticles, npoints
+       integer(int32) :: i
 
-    !    nparticles = 1
+       ! Create a matrix to store all the cilia forces and moments
+       real(c_double), allocatable :: cfx(:,:), cfy(:,:), cfz(:,:)
+       real(c_double), allocatable :: cmx(:,:), cmy(:,:), cmz(:,:)
+       
+       allocate(cfx(nvc-1,ncilia),cfy(nvc-1,ncilia),cfz(nvc-1,ncilia))
+       allocate(cmx(nvc-1,ncilia),cmy(nvc-1,ncilia),cmz(nvc-1,ncilia))
 
-    !    npoints = size(particles(1)%XE,1)
+       ! Add lines here to calculate the moments as well which will be copied to the
+       ! array in openfoam
+       do i = 1,ncilia
+           call cilia(i)%forces()
+           call cilia(i)%moments()
+       end do
 
+       ! Gather forces
+       do i = 1,ncilia
+           cfx(:,i) = cilia(i)%fden(:,1)
+           cfy(:,i) = cilia(i)%fden(:,2)
+           cfz(:,i) = 0.0d0 !cilia(i)%fden(:,3)
+       end do
+       ! Copy to openfoam
+       FXC = reshape(cfx,[nn])
+       FYC = reshape(cfy,[nn])
+       FZC = reshape(cfz,[nn])
+       
+       ! Gather moments
+       do i = 1,ncilia
+           cmx(:,i) = 0.0d0 !cilia(i)%mden(:,1)
+           cmy(:,i) = 0.0d0 !cilia(i)%mden(:,2)
+           cmz(:,i) = cilia(i)%mden !cilia(i)%mden(:,1)
+       end do
+       ! Copy to openfoam
+       MXC = reshape(cmx,[nn])
+       MYC = reshape(cmy,[nn])
+       MZC = reshape(cmz,[nn])
 
-    !    ! Add lines here to calculate the moments as well which will be copied to the
-    !    ! array in openfoam
-    !    do i = 1,nparticles
-    !        call particles(i)%calculate_forces()
-    !    end do
-
-    !    do i = 1,npoints
-    !        FXC(i)  = particles(1)%fden(i,1)
-    !        FYC(i)  = particles(1)%fden(i,2)
-    !        FZC(i)  = particles(1)%fden(i,3)
-    !    end do
-    ! end subroutine calculateforces
+    end subroutine calculateforcesandmoments
 
 
     ! subroutine updatepositions(U,V,W,dt,nn) bind(C)
