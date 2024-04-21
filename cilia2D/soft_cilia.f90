@@ -33,6 +33,9 @@ module soft_cilia
     logical :: orient, ctype
     real(8) :: nplus, nminus
 
+    ! Pseudo 3D
+    real(8) :: zcoord !Since cilia is ony 2D, we assign it's z-coordinate manually
+
     ! FEM data
     ! type(festruct), allocatable :: particles(:)
 
@@ -115,28 +118,35 @@ module soft_cilia
 
     ! end subroutine arraycheck
 
-    ! subroutine getpositions(XC,YC,ZC,nn) bind(C)
-    !    ! It takes in the position arrays defined in openfoam and fills
-    !    ! it with the particle's position values
-    !    use iso_c_binding, only: c_int, c_double, c_loc
-    !    implicit none
+    subroutine getpositions(XC,YC,ZC,nn) bind(C)
+       ! It takes in the position arrays defined in openfoam and fills
+       ! it with the particle's position values
+       use iso_c_binding, only: c_int, c_double, c_loc
+       implicit none
 
-    !    integer(c_int), intent(in)      :: nn
-    !    real(c_double), intent(inout)   :: XC(nn),YC(nn),ZC(nn)
+       integer(c_int), intent(in)      :: nn
+       real(c_double), intent(inout)   :: XC(nn),YC(nn),ZC(nn)
 
-    !    integer(int32) :: i, nparticles, npoints
+       ! Create a matrix to store all the cilia nodes
+       real(c_double), allocatable :: carrayx(:,:), carrayy(:,:), carrayz(:,:)
+       integer(int32) :: i
+       
+       allocate(carrayx(nvc-1,ncilia),carrayy(nvc-1,ncilia),carrayz(nvc-1,ncilia))
 
-    !    ! print *, "Size of XC: ", size(XC)
-    !    nparticles = 1
-
-    !    npoints = size(particles(1)%XE,1)
-
-    !    do i = 1,npoints
-    !        XC(i)   = particles(1)%XE(i,1)
-    !        YC(i)   = particles(1)%XE(i,2)
-    !        ZC(i)   = particles(1)%XE(i,3)
-    !    end do
-    ! end subroutine getpositions
+       !Since cilia is ony 2D, we assign it's z-coordinate manually
+       zcoord = Lz/2.0d0
+       do i = 1,ncilia
+           carrayx(:,i) = cilia(i)%XE(:,1)
+           carrayy(:,i) = cilia(i)%XE(:,2)
+           carrayz(:,i) = zcoord !cilia(i)%XE(:,3)
+       end do
+    
+       ! Reshape and copy to openfoam array
+        XC   = reshape(carrayx,[nn])
+        YC   = reshape(carrayy,[nn])
+        ZC   = reshape(carrayz,[nn])
+       
+    end subroutine getpositions
    
     ! subroutine calculateforces(FXC,FYC,FZC,nn) bind(C)
     !    ! Calculates the forces in the particle

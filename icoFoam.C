@@ -77,7 +77,7 @@ Description
 extern "C" {
     void generatecilia(int *noelpts, double *h);
     // void sayhello();
-    // void getpositions(double *pposx, double *pposy, double *pposz, int *noelpts);
+    void getpositions(double *pposx, double *pposy, double *pposz, int *noelpts);
     // subroutine getpositions(XC,YC,ZC) bind(C)
     // void calculateforces(double *pfx, double *pfy, double *pfz, int *noelpts);
     // subroutine calculateforces(FXC,FYC,FZC) bind(C)
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
     // vector rr(0.0,0.0,pzmid); // Define the point
 
     // // // Create vectors for storing the particle's Positions, Forces and Velocity
-    // std::vector<double> pposx(noelpts,0), pposy(noelpts,0), pposz(noelpts,0);   //Position
+    std::vector<double> pposx(noelpts,0), pposy(noelpts,0), pposz(noelpts,0);   //Position
     // std::vector<double> pfx(noelpts,0), pfy(noelpts,0), pfz(noelpts,0);         // Force
     // std::vector<double> pvx(noelpts,0), pvy(noelpts,0), pvz(noelpts,0);         // Velocity
 
@@ -139,9 +139,9 @@ int main(int argc, char *argv[])
 	    //# define omega 0.05
 	    //const dimensionedVector mySource("mySource", dimensionSet(0,1,-2,0,0,0,0), 1000*Foam::sin(runTime.value()*omega)*vector(0,1,0));
 
-        ///////////////////////////////////////////////////////////////////////////////////////////        
+        /////////////////////////////////////////////////////////////////////////////////////////        
         // Get positions of the ellipse
-        // getpositions(pposx.data(),pposy.data(),pposz.data(),&noelpts); 
+        getpositions(pposx.data(),pposy.data(),pposz.data(),&noelpts); 
         // Calculate the forces in the particle
         // calculateforces(pfx.data(),pfy.data(),pfz.data(),&noelpts);
 	// Calculate the moments in the cilia : Cilia
