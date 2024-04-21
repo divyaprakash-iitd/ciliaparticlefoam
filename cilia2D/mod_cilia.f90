@@ -473,7 +473,7 @@ module mod_cilia
         self%XE(1:self%NE,1) = self%XE(1:self%NE,1) + dt * self%U(1:self%NE,1)
         self%XE(1:self%NE,2) = self%XE(1:self%NE,2) + dt * self%U(1:self%NE,2)
 
-        self%phi(1:self%NE) = self%phi(1:self%NE) + dt * self%mden(1:self%NE)
+        ! self%phi(1:self%NE) = self%phi(1:self%NE) + dt * self%mden(1:self%NE)
 
     end subroutine update
 
@@ -539,11 +539,5 @@ module mod_cilia
         ! print *, self%motorf
     
     end subroutine calculate_motorf
-    
-    subroutine sayhello() bind(C)
-       use iso_c_binding, only: C_INT, C_CHAR
-       implicit none
-       print *, "Hello!"
-    end subroutine sayhello
 
 end module mod_cilia    

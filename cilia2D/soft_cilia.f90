@@ -12,9 +12,9 @@ module soft_cilia
     real(8), parameter :: PI = 3.141592653589793
     
     ! Computational Domain
-    real(8)    :: Lx = 10 !50 !0.3
-    real(8)    :: Ly = 10 !50 !0.1
-    real(8)    :: Lz = 10 !50 !0.1
+    real(8)    :: Lx = 0.01 !50 !0.3
+    real(8)    :: Ly = 0.002 !50 !0.1
+    real(8)    :: Lz = 0.0001 !50 !0.1
     
     ! ! Particle information
     ! integer         :: nvp ! Number of vertices in the particle
@@ -39,6 +39,9 @@ module soft_cilia
 
     ! Pseudo 3D
     real(8) :: zcoord !Since cilia is ony 2D, we assign it's z-coordinate manually
+
+    ! Keeping track of iterations for writing purposes
+    integer(int32)  :: itnum ! iteration number
 
     ! FEM data
     ! type(festruct), allocatable :: particles(:)
@@ -97,6 +100,9 @@ module soft_cilia
     do i = 1,ncilia 
         call write_field(cilia(i)%XE,'C',1)
     end do
+
+    ! Initialize the iteration number
+    itnum = 1
 
     end subroutine generatecilia
    
@@ -204,39 +210,51 @@ module soft_cilia
     end subroutine calculateforcesandmoments
 
 
-    ! subroutine updatepositions(U,V,W,dt,nn) bind(C)
-    !    ! Take in the velocity and angular velocity from openfoam
-    !    ! Use them to update the cilia position and orientation
-    !    use iso_c_binding, only: c_int, c_double, c_loc
-    !    implicit none
+    subroutine updatepositions(U,V,W,dt,nn) bind(C)
+       ! Take in the velocity and angular velocity from openfoam
+       ! Use them to update the cilia position and orientation
+       use iso_c_binding, only: c_int, c_double, c_loc
+       implicit none
 
-    !    integer(c_int), intent(in)      :: nn
-    !    real(c_double), intent(inout)   :: U(nn), V(nn) ,W(nn)
-    !    real(c_double), intent(in)      :: dt
+       integer(c_int), intent(in)      :: nn
+       real(c_double), intent(inout)   :: U(nn), V(nn) ,W(nn)
+       real(c_double), intent(in)      :: dt
 
-    !    integer(int32) :: i, nparticles, npoints
+       integer(int32) :: i
 
-    !    nparticles = 1
-
-    !    npoints = size(particles(1)%XE,1)
+       ! Create a matrix to store all the interpolated cilia velocity
+       real(c_double), allocatable :: cux(:,:), cuy(:,:), cuz(:,:)
+       allocate(cux(nvc-1,ncilia),cuy(nvc-1,ncilia),cuz(nvc-1,ncilia))
        
-    !    do i = 1,npoints
-    !        particles(1)%U(i,1) = U(i)
-    !        particles(1)%U(i,2) = V(i)
-    !        particles(1)%U(i,3) = W(i)
-    !    end do
+       ! Rehshape the obtained velocities in a matrix with columns corresponding to each cilia
+        cux = reshape(U,[nvc-1,ncilia])
+        cuy = reshape(V,[nvc-1,ncilia])
+        cuz = reshape(W,[nvc-1,ncilia])
+   
+        ! Copy openfoam data to cilia 
+       do i = 1,ncilia
+           cilia(i)%U(:,1) = cux(:,i)
+           cilia(i)%U(:,2) = cuy(:,i)
+        !    cilia(i)%U(:,3) = cuz(:,i)
+       end do
 
-    !    itnum = itnum + 1
+       itnum = itnum + 1
        
-    !    if (mod(itnum,200).eq.0) then
-    !        call write_field(particles(1)%XE,'P',itnum)
-    !    end if
+       if (mod(itnum,200).eq.0) then
+            do i = 1,ncilia
+                call write_field(cilia(i)%XE,'C',itnum)
+            end do
+       end if
 
-    !    do i = 1,nparticles
-    !        call particles(i)%update_position(dt)
-    !    end do
+       do i = 1,ncilia
+           call cilia(i)%update(dt)
+       end do
 
-    ! end subroutine updatepositions
+
+        do i = 1,ncilia 
+            call write_field(cilia(i)%XE,'L',1)
+        end do
+    end subroutine updatepositions
 
     ! ! Create 3 subroutines
     ! ! 1. Creates the ellipse and it's coordinates and connectivity. Basically reads it form the python generated file.
