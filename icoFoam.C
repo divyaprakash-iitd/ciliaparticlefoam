@@ -146,6 +146,7 @@ int main(int argc, char *argv[])
         getpositions(pposx.data(),pposy.data(),pposz.data(),&noelpts); 
         // Calculate the forces and moments in the cilia
         calculateforcesandmoments(pfx.data(),pfy.data(),pfz.data(), pmx.data(),pmy.data(),pmz.data(), &noelpts);
+        // Info << pfx << endl << pfy << endl << pfz << endl << pmx << endl << pmy << endl << pmz << endl;
 	// Calculate the moments in the cilia : Cilia
 
         // Create a list of lists to store the neighbours for 
@@ -184,6 +185,8 @@ int main(int argc, char *argv[])
         }
 
         F = F + 0.5*fvc::curl(mden);
+        // F = F*0;
+        // Info << "cdl: " << cdl << endl;
 	// Calculate forces arising from moments: Cilia
 	// Create and interpolate mden from cilia nodes and then calculate curl of mden to obtain these forces
         ///////////////////////////////////////////////////////////////////////////////////////////
