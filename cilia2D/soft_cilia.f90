@@ -12,9 +12,9 @@ module soft_cilia
     real(8), parameter :: PI = 3.141592653589793
     
     ! Computational Domain
-    real(8)    :: Lx = 0.01 !50 !0.3
+    real(8)    :: Lx = 0.002 !50 !0.3
     real(8)    :: Ly = 0.002 !50 !0.1
-    real(8)    :: Lz = 2.5e-5 !50 !0.1
+    real(8)    :: Lz = 1.25e-5 !50 !0.1
     
     ! ! Particle information
     ! integer         :: nvp ! Number of vertices in the particle
@@ -70,6 +70,7 @@ module soft_cilia
 
     integer(int32) :: i, err
 
+    print *, "HERE!"
     ! Read input data from file
     open(1004,file="input_params.dat",form='formatted')
     READ(unit=1004,nml=ciliaprops,iostat=err)
@@ -80,14 +81,15 @@ module soft_cilia
     print *, "ncilia = ", noelpts
     
     ! Create cilia
-    x0 = [Lx/4.0, 3*h]
+    ! x0 = [Lx/4.0, 3*h]
+    x0 = [Lx/4.0, Ly/2]
     ! l = Ly/4.0d0 
     allocate(cilia(ncilia), xcil(ncilia,2))
     lcbed = 0.80d0 * Lx ! Length of cilia bed
-    delc = lcbed / (ncilia - 1)
+    ! delc = lcbed / (ncilia - 1)
     xcil (:,2) = x0(2)
-    xcil(:,1) = (Lx - lcbed)/2.0d0 + delc * [(i-1, i=1, ncilia)]
-    ! xcil(:,1) = Lx/2.0
+    ! xcil(:,1) = (Lx - lcbed)/2.0d0 + delc * [(i-1, i=1, ncilia)]
+    xcil(:,1) = Lx/2.0
 
     ! Detection cilia
     orient = .FALSE.
@@ -95,7 +97,8 @@ module soft_cilia
     nplus = 0.0d0
     nminus = 0.0d0
     do i = 1,ncilia
-        cilia(i) = cilium(xcil(i,:),l,nvc,Kc,Bc,kap,bap,orient,ctype,nplus,nminus)
+        ! cilia(i) = cilium(xcil(i,:),l,nvc,Kc,Bc,kap,bap,orient,ctype,nplus,nminus)
+        cilia(i) = cilium(xcil(i,:),l,nvc,Kc,Bc,kap,bap)
     end do
             
     do i = 1,ncilia 
@@ -157,6 +160,7 @@ module soft_cilia
         XC   = reshape(carrayx,[nn])
         YC   = reshape(carrayy,[nn])
         ZC   = reshape(carrayz,[nn])
+
        
     end subroutine getpositions
    
@@ -183,9 +187,14 @@ module soft_cilia
        ! Add lines here to calculate the moments as well which will be copied to the
        ! array in openfoam
        do i = 1,ncilia
-           call cilia(i)%forces(0.000000000001d0)
-           call cilia(i)%moments()
+        !    call cilia(i)%forces(0.000000000001d0)
+           call cilia(i)%forces(ftip)
+           call cilia(i)%moments(mtip)
        end do
+
+    !    print *, maxval(abs(cilia(1)%fden(:,1)))
+    !    print *, maxval(abs(cilia(1)%fden(:,2)))
+    !    print *, maxval(abs(cilia(1)%mden))
 
        ! Gather forces
        do i = 1,ncilia
@@ -197,6 +206,7 @@ module soft_cilia
        FXC = reshape(cfx,[nn])
        FYC = reshape(cfy,[nn])
        FZC = reshape(cfz,[nn])
+
        
        ! Gather moments
        do i = 1,ncilia
@@ -265,7 +275,7 @@ module soft_cilia
        end if
 
        do i = 1,ncilia
-           call cilia(i)%update(dt)
+           call cilia(i)%update(dt,1,1)
        end do
 
 

@@ -49,16 +49,6 @@ module mod_krod
         real(real64), allocatable :: thetav(:) ! Ellipse angles at the vertices
         real(real64), allocatable :: theta(:) ! Ellipse angles at the mid-points
         real(real64), allocatable :: sigma0(:), N0(:) ! Reference stretching forces
-
-        ! Add variables to sliding displacment, sliding velocity and motor force
-        ! Remember these are scalar as they are defined along the cilia
-        real(real64), allocatable :: SD(:) ! Sliding displacement defined at midpoint
-        real(real64), allocatable :: SV(:) ! Sliding velocity defined at midpoint
-        real(real64), allocatable :: motorf(:) ! motor force defined at midpoint
-        real(real64), allocatable :: nplus(:)  ! fraction of motors in the bound state on the "+" filament per segment
-        real(real64), allocatable :: nminus(:) ! fraction of motors in the bound state on the "-" filament per segment
-        logical :: orient, release, ctype 
-
         
     end type krod 
 

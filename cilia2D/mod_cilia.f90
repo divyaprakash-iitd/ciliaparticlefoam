@@ -48,7 +48,6 @@ module mod_cilia
             procedure :: update
             procedure :: set_U
             procedure :: set_mden
-            procedure :: calculate_motorf
 
     end type cilium 
 
@@ -60,7 +59,7 @@ module mod_cilia
     ! Write a constructor which only requires number of points and fills in the
     ! other information by itself
 
-    pure type(cilium) function cilium_constructor(X0, L, NV, K, B, kap, bap, orient, ctype, nplus, nminus) result(self)
+    pure type(cilium) function cilium_constructor(X0, L, NV, K, B, kap, bap) result(self)
        real(real64), intent(in) :: X0(2) ! Length of cilium
        real(real64), intent(in) :: L ! Length of cilium
        integer(int32), intent(in) :: NV       
@@ -68,12 +67,8 @@ module mod_cilia
        real(real64), intent(in) :: B
        real(real64), intent(in) :: kap
        real(real64), intent(in) :: bap
-       logical, intent(in) :: orient
-       logical, intent(in) :: ctype
-       real(real64), intent(in) :: nplus
-       real(real64), intent(in) :: nminus
 
-       integer(int32) :: i,j,xid
+       integer(int32) :: i
        real(real64) :: theta, theta1, theta2, dtheta
        real(real64) :: radius
 
@@ -86,8 +81,6 @@ module mod_cilia
        self%B = B
        self%kap = kap
        self%bap = bap
-       self%orient = orient
-       self%ctype = ctype
        
        ! Allocate the arrays
        ! Defined at vertices
@@ -102,9 +95,7 @@ module mod_cilia
                      self%ds(self%NE-1), self%fden(self%NE,2), self%mden(self%NE), &
                      self%xeold(self%NE,2), self%phiold(self%NE), &
                      self%Uold(self%NE,2), self%mdenold(self%NE), &
-                     self%Umid(self%NE,2), self%mdenmid(self%NE), &
-                     self%SD(self%NE), self%SV(self%NE), self%motorf(self%NE), &
-                     self%nplus(self%NE), self%nminus(self%NE))
+                     self%Umid(self%NE,2), self%mdenmid(self%NE))
 
        ! Initialize the variables
        self%XV = 0.0d0
@@ -127,16 +118,6 @@ module mod_cilia
        self%mdenold = 0.0d0
        self%Umid = 0.0d0
        self%mdenmid = 0.0d0
-       self%release = .false.
-
-       ! Cilia motility
-       self%SD = 0.0d0
-       self%SV = 0.0d0
-       self%motorf = 0.0d0
-
-       ! Initialize bound motor fractions
-       self%nplus = nplus
-       self%nminus = nminus
 
     ! !-------------------------Horizontal Cilia-----------------------------!
     !    ! Calculate the vertices of the cilium
@@ -158,25 +139,12 @@ module mod_cilia
        self%dl = L/self%NE
        self%XV(:,1) = X0(1)
        self%XV(:,2) = X0(2) + self%dl * [(i, i=0, self%NE)]
-
-    ! if (orient) then
-    !    self%XV(:,1) = X0(1)
-    !    self%XV(:,2) = X0(2) - self%dl * [(i, i=0, self%NE)]
-    ! !    forall(xid=1:self%NV)
-    !         ! self%XV(xid,1) = self%XV(self%NV-xid+1,1)
-    !         ! self%XV(xid,2) = self%XV(self%NV-xid+1,2)
-    ! !    end forall 
-    ! end if
-
+      
        ! Calculate the mid-points of the elements 
        self%XE = self%XV(1:self%NE,:) + (self%XV(2:self%NV,:) - self%XV(1:self%NE,:)) / 2.0d0
        self%XEOLD = self%XE
         ! Original anchor point location
-        if (self%orient) then
-            self%XM0 = self%XE(self%NE,:)
-        else
-            self%XM0 = self%XE(1,:)
-        end if
+        self%XM0 = self%XE(1,:)
     !------Add code to calculate unit vectors for the first time step------!
        ! In the first time step, all the cilia are vertical
         self%phi = PI/2.0d0
@@ -255,7 +223,7 @@ module mod_cilia
         class(cilium), intent(inout) :: self
         real(real64), optional, intent(in) :: mtip
         
-        integer(int32) :: k, j
+        integer(int32) :: k
         real(real64) :: part1(self%NE)
         real(real64) :: part2(self%NE)
         real(real64) :: momap, theta
@@ -302,38 +270,16 @@ module mod_cilia
 
         self%mden = self%mden + 0.5d0 * (part1 + part2) / self%dl
 
+        ! Apply anchor point moment
+        theta = PI/2.0d0 - atan2(self%that(1,2), self%that(1,1))
+        !print *, "THe = ", theta
+        
+        momap = -self%bap * theta
+        self%mden(1) = self%mden(1) + (-momap)
+        
         ! Add moments to the tips
         if (present(mtip)) then
-            ! mtip = self%B / (self%L * 2.0d0)
-            ! mtip = self%B / self%rada
-            ! self%mom(1)   = self%mom(1)  + mtip
-            ! self%mom(self%NV)  = self%mom(self%NV) + mtip
-            ! self%mden(self%NE) = self%mden(self%NE) + mtip
-            self%mden(2) = self%mden(2) + mtip
-            ! do j=2,self%NE
-                ! self%mden(j) = self%mden(self%NE) + (mtip/self%NE)*(j*self%dl)
-            ! end do
-        end if
-        ! Add the motor's contribution
-        self%mden = self%mden + self%motorf
-        ! print *, self%motorf
-
-        ! Apply anchor point moment
-        ! theta = PI/2.0d0 - atan2(self%that(1,2), self%that(1,1))
-        ! !print *, "THe = ", theta
-        
-        ! momap = -self%bap * theta
-        if (self%orient) then 
-            ! theta = PI/2.0d0 - atan2(self%that(self%NE,2), self%that(self%NE,1))
-            ! momap = -self%bap * theta
-            ! self%mden(self%NE) = self%mden(self%NE) + (-momap)
-            theta = PI/2.0d0 - atan2(self%that(self%NE,2), self%that(self%NE,1))
-            momap = -self%bap * theta
-            self%mden(self%NE) = self%mden(self%NE) + (-momap)
-        else
-            theta = PI/2.0d0 - atan2(self%that(1,2), self%that(1,1))
-            momap = -self%bap * theta
-            self%mden(1) = self%mden(1) + (-momap)
+            self%mden(self%NE) = self%mden(self%NE) + mtip
         end if
 
         ! print *, sum(part1)
@@ -408,55 +354,14 @@ module mod_cilia
         ! Calculate the distance of the first mid-point from the anchor point
         dap = norm2([(self%XE(1,1)-self%X0(1)), (self%XE(1,2)-self%X0(2))])
        
-        ! fap(1) = self%kap * (self%XM0(1)-self%XE(1,1))
-        ! fap(2) = self%kap * (self%XM0(2)-self%XE(1,2))
+        fap(1) = self%kap * (self%XM0(1)-self%XE(1,1))
+        fap(2) = self%kap * (self%XM0(2)-self%XE(1,2))
         !print *, "Fap = ", fap
+        
+        self%fden(1,:)  = self%fden(1,:) + fap
 
-        if (self%ctype) then ! Cilia is flow altering type (ctype = 1)
-            if (self%orient) then ! Cilia is up side down (orient = 1) and flow altering type
-                ! Depending upon the orientation the captive forces will change 
-                fap(1) = self%kap * (self%XM0(1)-self%XE(self%NE,1)) ! Here we calculate the last node anchor forces
-                fap(2) = self%kap * (self%XM0(2)-self%XE(self%NE,2)) ! Since the cilia is upside down    
-                if (self%release) then ! Cilia is released
-                    self%fden(self%NE,:)  = self%fden(self%NE,:) + fap ! Anchor point
-                else ! Cilia is captive by horizontal springs along its nodes
-                    self%fden(self%NE,:)  = self%fden(self%NE,:) + fap ! Anchor point
-                    self%fden(1:self%NE-1,1)  = self%fden(1:self%NE-1,1) + self%kap * (self%XM0(1)-self%XE(1:self%NE-1,1))
-                end if
-            else ! Cilia is right side up and cilia is flow altering type
-                fap(1) = self%kap * (self%XM0(1)-self%XE(1,1))
-                fap(2) = self%kap * (self%XM0(2)-self%XE(1,2))
-                if (self%release) then ! Cilia is released
-                    self%fden(1,:)  = self%fden(1,:) + fap
-                else ! Cilia is captive by horizontal springs along its nodes
-                    self%fden(1,:)  = self%fden(1,:) + fap
-                    self%fden(2:self%NE,1)  = self%fden(2:self%NE,1) + self%kap * (self%XM0(1)-self%XE(2:self%NE,1))
-                end if
-            end if
-
-        else ! Cilia is flow detection type
-            fap(1) = self%kap * (self%XM0(1)-self%XE(1,1)) ! Only apply anchor forces at the bottom
-            fap(2) = self%kap * (self%XM0(2)-self%XE(1,2))
-            self%fden(1,:)  = self%fden(1,:) + fap
-        end if
-
-
-        if (self%orient) then 
-            fap(1) = self%kap * (self%XM0(1)-self%XE(self%NE,1))
-            fap(2) = self%kap * (self%XM0(2)-self%XE(self%NE,2))
-
-            if (self%release) then
-                self%fden(self%NE,:)  = self%fden(self%NE,:) + fap ! Anchor point
-            else
-                self%fden(self%NE,:)  = self%fden(self%NE,:) + fap ! Anchor point
-                self%fden(1:self%NE-1,1)  = self%fden(1:self%NE-1,1) + self%kap * (self%XM0(1)-self%XE(1:self%NE-1,1))
-            end if
-            
-        else
-            fap(1) = self%kap * (self%XM0(1)-self%XE(1,1))
-            fap(2) = self%kap * (self%XM0(2)-self%XE(1,2))
-            self%fden(1,:)  = self%fden(1,:) + fap
-        end if
+        ! print *, "maxfden1 = ", maxval(self%fden(:,1))
+        ! print *, "maxfden2 = ", maxval(self%fden(:,2))
 
     end subroutine forces
 
@@ -466,15 +371,27 @@ module mod_cilia
         self%U = ((self%F(2:self%NV,:) - self%F(1:self%NV-1,:))) / self%dl
     end subroutine velocity
     
-    elemental subroutine update(self, dt)
+    elemental subroutine update(self, dt, den, it)
         class(cilium), intent(inout) :: self
+        integer(int32), intent(in) :: den
         real(real64), intent(in) :: dt
+        integer(int32), intent(in) :: it
+        integer j
+
+        self%Umid(1:self%NE,1) = 0.50d0 * (self%U(1:self%NE,1) + self%Uold(1:self%NE,1))
+        self%Umid(1:self%NE,2) = 0.50d0 * (self%U(1:self%NE,2) + self%Uold(1:self%NE,2))
+        self%mdenmid(1:self%NE) = 0.50d0 * (self%mden(1:self%NE) + self%mdenold(1:self%NE))
+
+        ! if (it.eq.1) then
+            self%Umid = self%U
+            self%mdenmid = self%mden
+        ! end if
         
-        self%XE(1:self%NE,1) = self%XE(1:self%NE,1) + dt * self%U(1:self%NE,1)
-        self%XE(1:self%NE,2) = self%XE(1:self%NE,2) + dt * self%U(1:self%NE,2)
+        self%XE(1:self%NE,1) = self%XE(1:self%NE,1) + dt * self%Umid(1:self%NE,1)
+        self%XE(1:self%NE,2) = self%XE(1:self%NE,2) + dt * self%Umid(1:self%NE,2)
 
-        self%phi(1:self%NE) = self%phi(1:self%NE) + dt * self%mden(1:self%NE)
-
+        !------Update phi at the mid-points------!
+        self%phi(1:self%NE) = self%phi(1:self%NE) + dt * self%mdenmid(1:self%NE)
     end subroutine update
 
     elemental subroutine set_U(self, val)
@@ -490,54 +407,5 @@ module mod_cilia
 
         self%mden = val
     end subroutine set_mden
-
-    elemental impure subroutine calculate_motorf(self, dt, ma, mk, f0, fc, v0, mrho, mt, pi0, eps0)
-        class(cilium), intent(inout) :: self
-        real(real64), intent(in) :: dt, ma, mk, f0, fc, v0, mrho, mt, pi0, eps0
-
-        real(real64) :: nbar, ntilde, phi0, pi01, eps01
-        integer(int32) :: ii
-
-        ! Clamped boundary condition
-        phi0 = PI/2.0d0
-
-        ! Calculate Sliding displacement, SD and Sliding velocity, SV
-        self%SD = ma * (self%phi - phi0) 
-        ! self%SD = ma * (self%phi - self%phi(1)) 
-        self%SV = ma * self%mden 
-        
-        do ii = 1,self%NE
-            nbar    = self%nplus(ii) + self%nminus(ii)
-            ntilde  = self%nplus(ii) - self%nminus(ii)
-
-            ! Calculate motor force
-            self%motorf(ii) = f0*mrho*(nbar - (self%SV(ii)/v0) * ntilde) - mk*self%SD(ii)
-        end do
-
-        ! Multiply it with "-a" so that it can be added to the moment density term
-        self%motorf = -ma * self%motorf
-        ! self%motorf = ma * self%motorf
-        ! self%motorf(self%NE) = 0.0d0 
-        ! self%motorf(1:5) = 0.0d0 
-
-        pi01  = pi0 
-        eps01 = eps0
-        ! Evolve the bound motor fractions
-        do ii = 1,self%NE
-            pi01  = 0.17 
-            eps01 = 0.73
-            self%nplus(ii) = self%nplus(ii) + dt*(pi01*(1 - self%nplus(ii)) - & 
-                                            eps01*self%nplus(ii)*exp((f0/fc) *(1 - self%SV(ii)/v0)))
-            
-            pi01  = 0.25 
-            eps01 = 0.75
-            self%nminus(ii) = self%nminus(ii) + dt*(pi01*(1 - self%nminus(ii)) - & 
-                                            eps01*self%nminus(ii)*exp((f0/fc) *(1 + self%SV(ii)/v0)))
-        end do
-
-        ! print *, self%nplus - self%nminus
-        ! print *, self%motorf
-    
-    end subroutine calculate_motorf
 
 end module mod_cilia    

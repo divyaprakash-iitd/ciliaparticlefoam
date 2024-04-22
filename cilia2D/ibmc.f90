@@ -82,20 +82,13 @@ program ibmc
     real(real64), allocatable :: UN(:,:)
     logical, allocatable :: pboundary(:,:)
     integer(int32) :: femdata(2)
-    ! Cilia motor parameters
-    real(real64) :: ma, mk, f0, fc, v0, mrho, mt, nplus, nminus, pi0, eps0
-
-    integer(int32) :: cildiv
-    logical :: orient, ctype
-    real(real64) :: margin
    
     ! Namelists for input
     namelist /time/ dt, it_save, tsim
     namelist /grid/ Nx, Ny, Lx, Ly
     namelist /flow/ nu, rho, utop, TP
-    namelist /ciliaprops/ l, ftip, mtip, ncilia, Kc, nvc, Bc, kap, bap
+    namelist /ciliaprops/ ftip, mtip, ncilia, Kc, nvc, Bc, kap, bap
     namelist /particleprops/ Kp, nvp, Bp, aa, bb
-    namelist /motorprops/ ma, mk, f0, fc, v0, mrho, mt, nplus, nminus, pi0, eps0
 
     !---------------------- Begin Calculations ------------------------------------!
 
@@ -188,52 +181,20 @@ program ibmc
     x0 = [Lx/4.0, 3*M%dx]
     l = Ly/4.0d0 
     allocate(cilia(ncilia), xcil(ncilia,2))
-    cildiv = nint(ncilia/3.0)
-    lcbed = 0.60d0 * Lx/2 ! Length of cilia bed
-    delc = lcbed / (cildiv - 1)
-    xcil(1:cildiv,2) = x0(2)
-    ! margin = Lx/15.0d0
-    !margin = (Lx-2*lcbed)/6.0d0
-    margin = (Lx-2*lcbed)/11.0d0
-    ! xcil(1:cildiv,1) = (Lx - 2*lcbed)/3.0d0 + delc * [(i-1, i=1, cildiv)]
-    xcil(1:cildiv,1) = 5*margin + delc * [(i-1, i=1, cildiv)]
-    
-    ! Detection cilia
-    orient = .FALSE.
-    ctype = .FALSE.
-    do i = 1,cildiv
-        cilia(i) = cilium(xcil(i,:),l,nvc,Kc,Bc,kap,bap,orient,ctype,nplus,nminus)
+    lcbed = 0.80d0 * Lx ! Length of cilia bed
+    delc = lcbed / (ncilia - 1)
+    xcil (:,2) = x0(2)
+    xcil(:,1) = (Lx - lcbed)/2.0d0 + delc * [(i-1, i=1, ncilia)]
+    ! xcil(:,1) = Lx/2.0
+    do i = 1,ncilia
+        cilia(i) = cilium(xcil(i,:),l,nvc,Kc,Bc,kap,bap)
     end do
-
-    ! Transport cilia (top)
-    xcil(cildiv+1:2*cildiv,2) = Ly-l-x0(2)
-    orient = .TRUE.
-    ctype = .TRUE.
-    
-    ! xcil(cildiv+1:ncilia,1) = lcbed + 2*(Lx - 2*lcbed)/3.0d0 + delc * [(i-1, i=1, cildiv)]
-    xcil(cildiv+1:2*cildiv,1) = lcbed + 6*margin + delc * [(i-1, i=1, cildiv)]
-    do i = cildiv+1,2*cildiv
-        cilia(i) = cilium(xcil(i,:),l,nvc,Kc,Bc*1e0,kap,bap,orient,ctype,nplus,nminus)
-    end do
-    
-    ! Transport cilia (top)
-    xcil(2*cildiv+1:ncilia,2) = x0(2)
-    orient = .FALSE.
-    ctype = .TRUE.
-    ! xcil(cildiv+1:ncilia,1) = lcbed + 2*(Lx - 2*lcbed)/3.0d0 + delc * [(i-1, i=1, cildiv)]
-    xcil(2*cildiv+1:ncilia,1) = lcbed + 6*margin + delc * [(i-1, i=1, cildiv)]
-    do i = 2*cildiv+1,ncilia
-        cilia(i) = cilium(xcil(i,:),l,nvc,Kc,Bc*1e0,kap,bap,orient,ctype,nplus,nminus)
-    end do
-
-
+        
     ! Create fem particle
     call read_fem_data(mp,paelem,pb,pp)
     pboundary = .FALSE.
     ! PP(:,1) = PP(:,1) + Lx/2.0d0 
-    ! PP(:,1) = PP(:,1) + xcil(floor(ncilia/2.0),1) ! Place the particle on the top of the middle cilia 
-    !PP(:,1) = PP(:,1) + xcil(1,1) ! Place the particle on the top of the first cilia 
-    PP(:,1) = PP(:,1) + 2*aa ! Place the particle at the starting of the domain
+    PP(:,1) = PP(:,1) + xcil(floor(ncilia/2.0),1) ! Place the particle on the top of the middle cilia 
     ! PP(:,2) = PP(:,2) + Ly/2.0d0  
     PP(:,2) = PP(:,2) + (Ly - (3*M%dx + l))/2.0 + (l + 3*M%dx)
     ! kp = kval, co = bp
@@ -263,7 +224,7 @@ program ibmc
 
     init_status = .False. ! AmgX initialization status
     call calculate_rhs(M,u,v,R,rho,dt)
-    ! call calculate_pressure_amgx(A,Pold,R,init_status)
+    call calculate_pressure_amgx(A,Pold,R,init_status)
 
     ! Lid velocity
     ulid = utop
@@ -298,45 +259,28 @@ program ibmc
       
         write(*,'(A,F18.10)') 'time = ', t
 
-        ! Change cilia release state once the particle crosses a fixed percentage of the channel length
-        if (minval(particles(1)%XE(:,1)).gt.(0.4*Lx)) then
-            ! cilia(cildiv+1:2*cildiv)%release = .true.
-            cilia(2*cildiv+1:ncilia)%release = .true.
-        end if
-
         ! Apply velocity boundary conditions
         call apply_boundary_channel(M,u,v,utop,ubottom,uleft,uright,vtop,vbottom,vleft,vright)
 
         call particles(:)%calculate_forces()
-        ! call cilia(:)%forces(ftip)
         call cilia(:)%forces(ftip)
         call cilia(:)%moments()
-
-        ! call cilia(cildiv+1:ncilia)%forces(ftip)
-        ! call cilia(cildiv+1:ncilia)%moments()
-        
         Fx = 0.0d0 ! Initialize the forces at every time-step
         Fy = 0.0d0
         call spread_force(M,particles,Fx,Fy)
         call spread_force(M,cilia,Fx,Fy)
         call spread_vorticity_force(M,cilia,Fx,Fy)
 
-        ! call spread_force(M,cilia(cildiv+1:ncilia),Fx,Fy)
-        ! call spread_vorticity_force(M,cilia(cildiv+1:ncilia),Fx,Fy)
-        
         call advection(M,u,v,au,av)
         
-        ! call gradp(M,Pold,dpx,dpy)
+        call gradp(M,Pold,dpx,dpy)
         do iter=1,niter
           call diffusion(M,u,v,us,vs,du,dv,cnfac)
         !   us = (u + (nu*du - au + Fx - dpx/rho) * dt)/(1.0d0+aij*dt)
         !   vs = (v + (nu*dv - av + Fy - dpy/rho) * dt)/(1.0d0+aij*dt)
 
-        !   us = (u + (nu*du - au + Fx ) * dt)/(1.0d0+aij*dt)
-        !   vs = (v + (nu*dv - av + Fy) * dt)/(1.0d0+aij*dt)
-        
-        us = u + (nu*du - au + Fx) * dt
-        vs = v + (nu*dv - av + Fy) * dt
+          us = (u + (nu*du - au + Fx) * dt)/(1.0d0+aij*dt)
+          vs = (v + (nu*dv - av + Fy) * dt)/(1.0d0+aij*dt)
 
         ! Apply velocity boundary conditions to us and vs
         call apply_boundary_channel(M,us,vs,utop,ubottom,uleft,uright,vtop,vbottom,vleft,vright)
@@ -354,23 +298,16 @@ program ibmc
 
         ! Initialize velocity to zero and then Interpolate velocity
         call cilia(:)%set_U(0.0d0)
-        ! call cilia(cildiv+1:ncilia)%set_U(0.0d0)
         call particles%set_velocity(0.0d0)
         call interpolate_velocity(M,cilia,u,v)
-        ! call interpolate_velocity(M,cilia(cildiv+1:ncilia),u,v)
         call interpolate_velocity(M,particles,u,v)
 
         call vorticity(M,u,v,w)
         call cilia(:)%set_mden(0.0d0)
         call interpolate_vorticity(M,cilia,w)
-        
-        ! call cilia(cildiv+1:ncilia)%set_mden(0.0d0)
-        ! call interpolate_vorticity(M,cilia(cildiv+1:ncilia),w)
 
         ! Update structure
-        ! call cilia(:)%update(dt)
-        call cilia(:)%update(dt)
-        ! call cilia(cildiv+1:ncilia)%update(dt)
+        call cilia(:)%update(dt,1,1)
         call particles(:)%update_position(dt)
 
         ! update "guess value" of pressure
@@ -384,10 +321,6 @@ program ibmc
             call write_field(w,'w',it); 
             do ic = 1,ncilia 
                 call write_field(cilia(ic)%XE,'C',it)
-                ! call write_field(spread(cilia(ic)%phiv,2,1),'T',it)
-                call write_field(spread(cilia(ic)%phi,2,2),'T',it)
-                ! call write_field(spread(cilia(ic)%phi,2,2),'T',it)
-                ! call write_field(spread(cilia(ic)%phi,2,2),'T',it)
             end do
             call write_field(particles(1)%XE,'P',it)
         end if
