@@ -10,6 +10,6 @@ program check_mod
     !call generateellipse(n)
     print *, "n = ", n
 
-    call generatecilia(n,h,h) 
+    call generatecilia(n,h,h,h,h,h) 
 
 end program check_mod
