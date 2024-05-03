@@ -75,7 +75,7 @@ Description
 #include "diracdelta.H"
 // Declare the external subroutine
 extern "C" {
-    void generatecilia(int *noelpts, double *cdl, double *h);
+    void generatecilia(int *noelpts, double *cdl, double *h, double *LX, double *LY, double *LZ);
     // void sayhello();
     void getpositions(double *pposx, double *pposy, double *pposz, int *noelpts);
     // subroutine getpositions(XC,YC,ZC) bind(C)
@@ -110,16 +110,23 @@ int main(int argc, char *argv[])
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
     Info<< "\nStarting time loop\n" << endl;
+    // Box dimensions
+    double LX,LY,LZ;
+    // Info << mesh.bounds().max()[0] << endl;
+    LX = mesh.bounds().max()[0];
+    LY = mesh.bounds().max()[1];
+    LZ = mesh.bounds().max()[2];
     int noelpts;
     double meshwidth = mesh.C()[1][0] - mesh.C()[0][0];
     double cdl;
-    generatecilia(&noelpts,&cdl,&meshwidth);
+    generatecilia(&noelpts,&cdl,&meshwidth,&LX,&LY,&LZ);
     Info << "No. of cilia points: " << noelpts << endl;
-
+    Info << "CDL: " << cdl << endl << "Mesh Width: " << meshwidth << endl;
     // // Initial position of the point source
     scalar pzmid = (mesh.C()[1][0] - mesh.C()[0][0])/2.0;
     // Info << "ZZ: " << pzmid << endl;
     vector rr(0.0,0.0,pzmid); // Define the point
+
 
     // // // Create vectors for storing the particle's Positions, Forces and Velocity
     std::vector<double> pposx(noelpts,0), pposy(noelpts,0), pposz(noelpts,0);   //Position
