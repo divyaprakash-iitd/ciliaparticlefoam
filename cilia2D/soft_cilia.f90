@@ -12,9 +12,9 @@ module soft_cilia
     real(8), parameter :: PI = 3.141592653589793
     
     ! Computational Domain
-    real(8)    :: Lx = 0.002 !50 !0.3
-    real(8)    :: Ly = 0.002 !50 !0.1
-    real(8)    :: Lz = 1.25e-5 !50 !0.1
+    real(8)    :: Lx != 1 !0.002 !50 !0.3
+    real(8)    :: Ly != 1 !0.002 !50 !0.1
+    real(8)    :: Lz != 1 !0.002 !1.25e-5 !50 !0.1
     
     ! ! Particle information
     ! integer         :: nvp ! Number of vertices in the particle
@@ -60,12 +60,13 @@ module soft_cilia
        print *, "Hello!"
     end subroutine say_hello
 
-    subroutine generatecilia(noelpts,cdl,h) bind(C)
+    subroutine generatecilia(noelpts,cdl,h,MX,MY,MZ) bind(C)
     use iso_c_binding, only: C_INT, C_CHAR, c_double
     implicit none
 
     integer(C_INT), intent(inout) :: noelpts ! No. of points in all the cilia
     real(c_double), intent(in) :: h ! Mesh width in openfoam
+    real(c_double), intent(in) :: MX,MY,MZ ! Mesh extent
     real(c_double), intent(inout) :: cdl ! The segment length of cilia
 
     integer(int32) :: i, err
@@ -79,17 +80,21 @@ module soft_cilia
     ! Copy the total no. of points to the openfoam variable
     noelpts = ncilia*(nvc-1) ! (-1) because the cilia is only represented by midpoints
     print *, "ncilia = ", noelpts
-    
+   
+    LX = MX
+    LY = MY
+    LZ = MZ
+
     ! Create cilia
     ! x0 = [Lx/4.0, 3*h]
     x0 = [Lx/4.0, Ly/2]
     ! l = Ly/4.0d0 
     allocate(cilia(ncilia), xcil(ncilia,2))
     lcbed = 0.80d0 * Lx ! Length of cilia bed
-    ! delc = lcbed / (ncilia - 1)
+    ! delc = lcbed / (ncilia - 1) ! comment this line for 1 cilia
     xcil (:,2) = x0(2)
-    ! xcil(:,1) = (Lx - lcbed)/2.0d0 + delc * [(i-1, i=1, ncilia)]
-    xcil(:,1) = Lx/2.0
+    ! xcil(:,1) = (Lx - lcbed)/2.0d0 + delc * [(i-1, i=1, ncilia)] ! comment this line for 1 cilia
+    xcil(:,1) = Lx/2.0 ! uncomment this line for 1 cilia
 
     ! Detection cilia
     orient = .FALSE.
@@ -190,6 +195,8 @@ module soft_cilia
         !    call cilia(i)%forces(0.000000000001d0)
            call cilia(i)%forces(ftip)
            call cilia(i)%moments(mtip)
+        !    call cilia(i)%forces()
+        !    call cilia(i)%moments()
        end do
 
     !    print *, maxval(abs(cilia(1)%fden(:,1)))
