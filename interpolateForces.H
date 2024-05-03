@@ -8,4 +8,7 @@ ddpoint[2] = mesh.C()[icell][2] - rr[2];
 F[icell][0] = F[icell][0] + pf[0]*cdl*hh*diracdelta(ddpoint,hh);
 F[icell][1] = F[icell][1] + pf[1]*cdl*hh*diracdelta(ddpoint,hh);
 F[icell][2] = F[icell][2] + pf[2]*cdl*hh*diracdelta(ddpoint,hh);
+// F[icell][0] = F[icell][0] + pf[0]*cdl*diracdelta(ddpoint,hh);
+// F[icell][1] = F[icell][1] + pf[1]*cdl*diracdelta(ddpoint,hh);
+// F[icell][2] = F[icell][2] + pf[2]*cdl*diracdelta(ddpoint,hh);
 
