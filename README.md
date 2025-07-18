@@ -18,5 +18,7 @@ The standard `icoFoam` solver in OpenFOAM is modified to include a source term f
 - **Interoperability**: Links Fortran and C++ code.
 - **3D Simulation**: Designed for 3D FSI simulations.
 
-# Need to run this in the shell before running the solver
+Note: Need to run this in the shell before running the solver
+```bash
 export LD_LIBRARY_PATH=/home/divyaprakash/my_solvers/ofcil3D/fem2d:$LD_LIBRARY_PATH
+```
