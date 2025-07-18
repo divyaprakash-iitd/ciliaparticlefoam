@@ -1,5 +1,4 @@
-# ofcil3D
-OpenFOAM coupled with a 3D FEM code
+# OpenFOAM coupled with a 3D FEM code
 
 <p align="center">
   <img src="3d_particle.webp" alt="Animation" />
