@@ -6,6 +6,7 @@ OpenFOAM coupled with a 3D FEM code
 </p>
 
 > This repo is a Work in Progress!
+
 This project integrates a Fortran-based 3D solid mechanics solver with OpenFOAM using the Immersed Boundary Method (IBM). It allows for fluid-structure interaction (FSI) simulations of deformable solids in a fluid flow.
 
 ## Overview
